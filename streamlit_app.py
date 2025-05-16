@@ -56,4 +56,3 @@ if main_topic:
     feedback = st.text_area(translate("궁금한 점이나 요청하고 싶은 내용을 적어주세요"))
     if st.button(translate("제출")):
         st.success(translate("소중한 의견 감사합니다! 빠른 시일 내 반영하겠습니다."))
-
