@@ -124,42 +124,26 @@ if main_topic:
 
         st.success(translate(item))
 
-    # ✅ 계약서 예시/양식
+   if main_topic in ["계약서", "아르바이트"]:
 
-    if main_topic in ["계약서", "아르바이트"]:
+    st.markdown("---")
 
-        st.markdown("---")
+    st.subheader(translate(":page_with_curl: 계약서 예시/양식 보기"))
 
-        st.subheader(translate(":page_with_curl: 계약서 예시/양식 보기"))
+    # ✅ 외부 링크로 PDF 다운로드 버튼 제공
 
-        # ✅ 업로드한 PDF 다운로드 제공
+    st.markdown(
 
-        try:
+        f"[📄 표준 근로계약서 PDF 열기]({translate('https://inpyeonglaw.com/wp-content/uploads/2025/03/%EA%B0%9C%EC%A0%95-%ED%91%9C%EC%A4%80%EC%B7%A8%EC%97%85%EA%B7%9C%EC%B9%992025%EB%85%84-%EB%B0%B0%ED%8F%AC.pdf')})"
 
-            with open("개정-표준근로계약서2025년-배포.pdf", "rb") as f:
+    )
 
-                st.download_button(
+    # ✅ 계약서 사이트 이미지와 링크
 
-                    label="📄 표준 근로계약서 PDF 다운로드",
+    st.image("https://viewer.moj.go.kr/images/sub/skin/skinDoc_01.gif", caption="법무부 계약서 예시 이미지")
 
-                    data=f,
-
-                    file_name="표준근로계약서.pdf",
-
-                    mime="application/pdf"
-
-                )
-
-        except:
-
-            st.warning("PDF 파일을 찾을 수 없습니다. 파일명이 올바른지 확인하세요.")
-
-        # ✅ 계약서 사이트 이미지 + 링크
-
-        st.image("https://viewer.moj.go.kr/images/sub/skin/skinDoc_01.gif", caption="법무부 계약서 예시 이미지")
-
-        st.markdown("[👉 법무부 계약서 전체 보기](https://viewer.moj.go.kr/skin/doc.html?rs=/result/bbs/118&fn=temp_1681802272120100)")
-
+    st.markdown("[👉 법무부 계약서 전체 보기](https://viewer.moj.go.kr/skin/doc.html?rs=/result/bbs/118&fn=temp_1681802272120100)")
+ 
     # ✅ 부동산 관련 링크
 
     if main_topic == "부동산":
