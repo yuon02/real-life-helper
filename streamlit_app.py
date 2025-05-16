@@ -37,15 +37,18 @@ if main_topic:
     else:
         st.success(translate(item))
 
-    # 관련 뉴스 출력
+    # 계약서 관련 항목일 경우 예시 이미지 제공
+    if main_topic == "계약서":
+        st.markdown("---")
+        st.subheader(translate(":page_with_curl: 계약서 예시/양식 보기"))
+        st.image("https://www.law.go.kr/images/img_contract_sample.jpg", caption=translate("표준 근로계약서 예시"))
+        st.image("https://www.law.go.kr/images/img_rent_contract.jpg", caption=translate("임대차 계약서 예시"))
+
+    # 관련 뉴스 출력 (네이버 뉴스 검색 링크 제공)
     st.markdown("---")
-    st.subheader(translate(":newspaper: 최신 관련 기사"))
-    news_list = get_related_news(main_topic, sub_topic)
-    if news_list:
-        for news in news_list:
-            st.markdown(f"- [{translate(news['title'])}]({news['url']})")
-    else:
-        st.info(translate("관련 기사를 찾을 수 없습니다."))
+    st.subheader(translate(":newspaper: 관련 네이버 뉴스 보기"))
+    naver_news_url = f"https://search.naver.com/search.naver?where=news&query={main_topic}+{sub_topic}"
+    st.markdown(f"[{translate(main_topic + ' ' + sub_topic)} 관련 네이버 뉴스 보기]({naver_news_url})")
 
     # 사용자 피드백
     st.markdown("---")
@@ -53,3 +56,4 @@ if main_topic:
     feedback = st.text_area(translate("궁금한 점이나 요청하고 싶은 내용을 적어주세요"))
     if st.button(translate("제출")):
         st.success(translate("소중한 의견 감사합니다! 빠른 시일 내 반영하겠습니다."))
+
