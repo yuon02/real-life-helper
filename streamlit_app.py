@@ -1,6 +1,6 @@
 import streamlit as st
 
-# ✅ 페이지 설정: 반드시 가장 먼저!
+# ✅ 페이지 설정: 반드시 가장 위에 위치
 
 st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
 
@@ -18,7 +18,7 @@ import urllib.parse
 
 import re
 
-# 타이틀 및 소개
+# 타이틀 및 설명
 
 st.title(":books: 청년 실생활 정보 도우미")
 
@@ -36,7 +36,7 @@ translate = lambda text: translator.translate(text, dest="en").text if lang == "
 
 main_topic = st.selectbox(translate("궁금한 주제를 선택하세요 ⬇"), ["아르바이트", "부동산", "금융", "계약서"])
 
-# 유튜브 영상 정보 크롤링 함수 (API 없이)
+# 유튜브 영상 정보 크롤링 함수 (API 없이 동작)
 
 def get_youtube_video_info(query):
 
@@ -96,6 +96,8 @@ def get_youtube_video_info(query):
 
     return None
 
+# 본문 실행
+
 if main_topic:
 
     topic_data = get_topic_data(main_topic)
@@ -124,27 +126,27 @@ if main_topic:
 
         st.success(translate(item))
 
-   if main_topic in ["계약서", "아르바이트"]:
+    # ✅ 계약서 및 아르바이트 관련 양식 표시
 
-    st.markdown("---")
+    if main_topic in ["계약서", "아르바이트"]:
 
-    st.subheader(translate(":page_with_curl: 계약서 예시/양식 보기"))
+        st.markdown("---")
 
-    # ✅ 외부 링크로 PDF 다운로드 버튼 제공
+        st.subheader(translate(":page_with_curl: 계약서 예시/양식 보기"))
 
-    st.markdown(
+        # ✅ 외부 PDF 링크로 제공 (2025년 PDF)
 
-        f"[📄 표준 근로계약서 PDF 열기]({translate('https://inpyeonglaw.com/wp-content/uploads/2025/03/%EA%B0%9C%EC%A0%95-%ED%91%9C%EC%A4%80%EC%B7%A8%EC%97%85%EA%B7%9C%EC%B9%992025%EB%85%84-%EB%B0%B0%ED%8F%AC.pdf')})"
+        pdf_url = "https://inpyeonglaw.com/wp-content/uploads/2025/03/%EA%B0%9C%EC%A0%95-%ED%91%9C%EC%A4%80%EC%B7%A8%EC%97%85%EA%B7%9C%EC%B9%992025%EB%85%84-%EB%B0%B0%ED%8F%AC.pdf"
 
-    )
+        st.markdown(f"[📄 표준 근로계약서 PDF 열기]({pdf_url})")
 
-    # ✅ 계약서 사이트 이미지와 링크
+        # ✅ 계약서 예시 이미지 및 사이트 링크
 
-    st.image("https://viewer.moj.go.kr/images/sub/skin/skinDoc_01.gif", caption="법무부 계약서 예시 이미지")
+        st.image("https://viewer.moj.go.kr/images/sub/skin/skinDoc_01.gif", caption="법무부 계약서 예시 이미지")
 
-    st.markdown("[👉 법무부 계약서 전체 보기](https://viewer.moj.go.kr/skin/doc.html?rs=/result/bbs/118&fn=temp_1681802272120100)")
- 
-    # ✅ 부동산 관련 링크
+        st.markdown("[👉 법무부 계약서 전체 보기](https://viewer.moj.go.kr/skin/doc.html?rs=/result/bbs/118&fn=temp_1681802272120100)")
+
+    # ✅ 부동산 관련 사이트 안내
 
     if main_topic == "부동산":
 
@@ -160,15 +162,15 @@ if main_topic:
 
         st.info(translate("청약 신청, 임대차 보호법, 대출 상품 등을 제공하는 공식 사이트입니다. 꼭 참고하세요."))
 
-        # ✅ 부동산 뉴스 링크
+        # ✅ 부동산 뉴스 링크 추가
 
         st.markdown("---")
 
         st.subheader(translate(":newspaper: 부동산 관련 뉴스 보기"))
 
-        st.markdown(f"[부동산 관련 네이버 뉴스 보기](https://search.naver.com/search.naver?where=news&query=부동산)")
+        st.markdown("[네이버 뉴스 검색 결과 보기](https://search.naver.com/search.naver?where=news&query=부동산)")
 
-    # ✅ 뉴스 보기 (모든 주제에 공통)
+    # ✅ 네이버 뉴스 링크 (모든 항목 공통)
 
     st.markdown("---")
 
@@ -178,7 +180,7 @@ if main_topic:
 
     st.markdown(f"[{translate(main_topic + ' ' + sub_topic)} 관련 뉴스 보기]({naver_news_url})")
 
-    # ✅ 유튜브 영상 보기
+    # ✅ 유튜브 영상 출력
 
     st.markdown("---")
 
@@ -196,7 +198,7 @@ if main_topic:
 
         st.info(translate("관련 유튜브 영상을 찾을 수 없습니다."))
 
-    # ✅ 사용자 의견
+    # ✅ 사용자 의견 입력
 
     st.markdown("---")
 
