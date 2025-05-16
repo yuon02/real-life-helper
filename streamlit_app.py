@@ -1,4 +1,5 @@
 import streamlit as st
+st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
 
 from utils.helper import get_topic_data, get_related_news
 
@@ -13,9 +14,7 @@ from bs4 import BeautifulSoup
 import urllib.parse
 
 import re
- 
-st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
- 
+  
 st.title(":books: 청년 실생활 정보 도우미")
 
 st.markdown("청년, 대학생, 사회초년생을 위한 맞춤 정보 플랫폼입니다!")
