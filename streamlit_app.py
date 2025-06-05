@@ -11,7 +11,7 @@ import re
 st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
 
 # ✅ 로고 이미지 상단에 표시
-st.image("static/logo.png", width=120)
+st.image("https://raw.githubusercontent.com/yuon02/real-life-helper/main/logo.png", width=120)
 st.markdown("<h1 style='color:#3F72AF;'>청년 실생활 정보 도우미</h1>", unsafe_allow_html=True)
 st.caption("모바일처럼 편리하게, 필요한 생활 정보를 한눈에 확인하세요.")
 
