@@ -25,9 +25,7 @@ main_topic = st.selectbox("📌 주제를 선택하세요", ["아르바이트", 
 
 # 유튜브 크롤링 함수
 def get_youtube_video_info(query):
-    headers = {
-        "User-Agent": "Mozilla/5.0"
-    }
+    headers = {"User-Agent": "Mozilla/5.0"}
     search_query = urllib.parse.quote(query)
     url = f"https://www.youtube.com/results?search_query={search_query}"
     response = requests.get(url, headers=headers)
@@ -53,6 +51,29 @@ def get_youtube_video_info(query):
                 except Exception as e:
                     print("파싱 오류:", e)
     return None
+
+# 뉴스 미리보기 함수
+def get_news_snippets(query):
+    try:
+        search_query = urllib.parse.quote(query)
+        url = f"https://search.naver.com/search.naver?where=news&query={search_query}"
+        headers = {"User-Agent": "Mozilla/5.0"}
+        response = requests.get(url, headers=headers)
+        soup = BeautifulSoup(response.text, "html.parser")
+        items = soup.select(".news_wrap.api_ani_send")
+        news = []
+        for item in items[:5]:
+            title_tag = item.select_one(".news_tit")
+            summary_tag = item.select_one(".dsc_wrap")
+            if title_tag and summary_tag:
+                news.append({
+                    "title": title_tag.get("title"),
+                    "link": title_tag.get("href"),
+                    "summary": summary_tag.get_text()
+                })
+        return news
+    except Exception as e:
+        return []
 
 # 주제별 정보 가져오기
 if main_topic:
@@ -85,11 +106,13 @@ if main_topic:
         # 🟦 탭 2: 뉴스
         with tab2:
             st.subheader(translate("📰 관련 뉴스 보기"))
-            if main_topic == "부동산":
-                st.markdown("[📈 집값 뉴스 보기](https://search.naver.com/search.naver?where=news&query=집값)")
-                st.markdown("[🏛️ 부동산 정책 뉴스 보기](https://search.naver.com/search.naver?where=news&query=부동산+정책)")
-            news_url = f"https://search.naver.com/search.naver?where=news&query={main_topic}+{sub_topic}"
-            st.markdown(f"[🔍 {translate(main_topic + ' ' + sub_topic)} 관련 뉴스 보기]({news_url})")
+            news_items = get_news_snippets(f"{main_topic} {sub_topic}")
+            if news_items:
+                for news in news_items:
+                    st.markdown(f"**[{news['title']}]({news['link']})**")
+                    st.caption(news['summary'])
+            else:
+                st.warning(translate("관련 뉴스를 찾을 수 없습니다."))
 
         # 🟦 탭 3: 계약서 예시
         with tab3:
