@@ -1,4 +1,6 @@
 import streamlit as st
+st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
+st.image("logo.png", width=150)  # 로고 이미지 추가
 # ✅ 페이지 설정: 반드시 가장 위에 위치
 st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
 from utils.helper import get_topic_data
@@ -72,6 +74,16 @@ if main_topic:
        # ✅ 계약서 예시 이미지 및 사이트 링크
        st.image("https://viewer.moj.go.kr/images/sub/skin/skinDoc_01.gif", caption="법무부 계약서 예시 이미지")
        st.markdown("[👉 법무부 계약서 전체 보기](https://viewer.moj.go.kr/skin/doc.html?rs=/result/bbs/118&fn=temp_1681802272120100)")
+             # ✅ 서울법원 계약서 목록 출력
+       st.markdown("---")
+       st.subheader(translate("📚 서울법원 계약서 양식 모음"))
+       contracts = get_seoulcourt_contracts()
+       if contracts:
+           for name, link in contracts:
+               st.markdown(f"- [{translate(name)}]({link})")
+       else:
+           st.warning(translate("서울법원 계약서 목록을 불러올 수 없습니다."))
+
    # ✅ 부동산 관련 사이트 안내
    if main_topic == "부동산":
        st.markdown("---")
