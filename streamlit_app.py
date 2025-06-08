@@ -123,7 +123,8 @@ if main_topic:
         # 📰 관련 뉴스
         with tab2:
             st.subheader(translate("📰 관련 뉴스 보기"))
-            news_items = get_news_snippets(f"{main_topic} {sub_topic}")
+            search_keyword = f"{main_topic} 관련 뉴스 {sub_topic}"
+            news_items = get_news_snippets(search_keyword)
             if news_items:
                 for news in news_items:
                     st.markdown(f"**[{news['title']}]({news['link']})**")
@@ -137,11 +138,8 @@ if main_topic:
                 st.subheader(translate("📄 서울법원 계약서 열람 및 다운로드"))
                 contract_list = get_contract_list()
                 if contract_list:
-                    contract_names = [c["name"] for c in contract_list]
-                    selected_contract = st.selectbox("📄 다운로드할 계약서를 선택하세요", contract_names)
-                    contract = next((c for c in contract_list if c["name"] == selected_contract), None)
-                    if contract:
-                        st.markdown(f"👉 [계약서 다운로드]({contract['url']})")
+                    for contract in contract_list:
+                        st.markdown(f"📄 **{contract['name']}** 👉 [다운로드]({contract['url']})")
                 else:
                     st.warning(translate("계약서 목록을 불러올 수 없습니다."))
             else:
@@ -165,3 +163,4 @@ if main_topic:
                 st.success(translate("소중한 의견 감사합니다! 빠른 시일 내 반영하겠습니다."))
     else:
         st.warning(translate("선택한 주제에 대한 정보가 없습니다."))
+
