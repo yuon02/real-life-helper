@@ -1,166 +1,114 @@
 import streamlit as st
-from utils.helper import get_topic_data
-from googletrans import Translator
+import pandas as pd
 import requests
-import json
 from bs4 import BeautifulSoup
-import urllib.parse
-import re
 
 # 페이지 설정
-st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
+st.set_page_config(page_title="실생활 정보 도우미", layout="wide")
 
-# ✅ 로고 이미지 상단에 표시 (GitHub 경로)
-st.image("https://raw.githubusercontent.com/yuon02/real-life-helper/main/logo.png", width=120)
-st.markdown("<h1 style='color:#3F72AF;'>청년 실생활 정보 도우미</h1>", unsafe_allow_html=True)
-st.caption("모바일처럼 편리하게, 필요한 생활 정보를 한눈에 확인하세요.")
+# 기본 정보
+st.title("🧭 실생활 정보 도우미")
+st.markdown("대학생 및 사회초년생을 위한 분야별 실용 정보, 뉴스, 계약서 양식, 영상, 다국어 번역 제공")
 
-# 언어 설정
-lang = st.selectbox("🌐 언어 선택", ["한국어", "English"])
-translator = Translator()
-translate = lambda text: translator.translate(text, dest="en").text if lang == "English" else text
+# 분야 리스트
+topics = ["부동산", "아르바이트", "금융", "세금", "계약"]
 
-# 주제 선택
-main_topic = st.selectbox("📌 주제를 선택하세요", ["아르바이트", "부동산", "금융", "계약서"])
+# 사용자 선택
+selected_topic = st.selectbox("관심 있는 주제를 선택하세요", topics)
 
-# 유튜브 영상 크롤링
-def get_youtube_video_info(query):
-    headers = {"User-Agent": "Mozilla/5.0"}
-    search_query = urllib.parse.quote(query)
-    url = f"https://www.youtube.com/results?search_query={search_query}"
-    response = requests.get(url, headers=headers)
-    soup = BeautifulSoup(response.text, "html.parser")
-    for script in soup.find_all("script"):
-        if "var ytInitialData" in script.text:
-            match = re.search(r'var ytInitialData = ({.*?});', script.string or "", re.DOTALL)
-            if match:
-                try:
-                    data = json.loads(match.group(1))
-                    items = data["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"]
-                    for item in items:
-                        if "videoRenderer" in item:
-                            video = item["videoRenderer"]
-                            title = video["title"]["runs"][0]["text"]
-                            video_id = video["videoId"]
-                            thumbnail = video["thumbnail"]["thumbnails"][-1]["url"]
-                            return {
-                                "videoId": video_id,
-                                "title": title,
-                                "thumbnail": thumbnail
-                            }
-                except Exception as e:
-                    print("파싱 오류:", e)
-    return None
+# 각 분야별 기본 설명 및 처리
+topic_info = {
+    "부동산": "부동산 임대차, 전세계약, 중개 관련 정보를 제공합니다.",
+    "아르바이트": "근로계약서, 시급, 주휴수당 관련 정보를 확인하세요.",
+    "금융": "은행 계좌, 카드, 대출 관련 기초 지식을 제공합니다.",
+    "세금": "소득세, 주민세, 연말정산 등에 대한 정보를 안내합니다.",
+    "계약": "일상 생활에서 필요한 계약의 기초 개념과 양식을 제공합니다.",
+}
 
-# 뉴스 크롤링 함수
-def get_news_snippets(query):
+st.subheader(f"📌 {selected_topic} 정보")
+st.markdown(topic_info[selected_topic])
+
+# ✅ 뉴스 가져오기 기능 (분야별로 다르게 표시)
+def get_news(topic):
     try:
-        search_query = urllib.parse.quote(query)
-        url = f"https://search.naver.com/search.naver?where=news&query={search_query}"
-        headers = {"User-Agent": "Mozilla/5.0"}
-        response = requests.get(url, headers=headers)
-        soup = BeautifulSoup(response.text, "html.parser")
-        items = soup.select(".news_wrap.api_ani_send")
-        news = []
-        for item in items[:5]:
-            title_tag = item.select_one(".news_tit")
-            summary_tag = item.select_one(".dsc_wrap")
-            if title_tag and summary_tag:
-                news.append({
-                    "title": title_tag.get("title"),
-                    "link": title_tag.get("href"),
-                    "summary": summary_tag.get_text()
-                })
-        return news
+        query = f"{topic} 실생활"
+        url = f"https://search.naver.com/search.naver?where=news&query={query}"
+        response = requests.get(url)
+        soup = BeautifulSoup(response.text, 'html.parser')
+
+        news_items = soup.select("a.news_tit")
+        news_list = []
+
+        for item in news_items[:5]:
+            title = item.get("title")
+            link = item.get("href")
+            news_list.append((title, link))
+        return news_list
     except Exception as e:
-        return []
+        return [("뉴스를 가져오는 중 오류 발생", "#")]
 
-# 서울법원 계약서 목록 크롤링
-def get_contract_list():
-    url = "https://seoul.scourt.go.kr/contract/new/DocListAction.work"
-    headers = {"User-Agent": "Mozilla/5.0"}
-    response = requests.get(url, headers=headers)
-    response.encoding = 'utf-8'
-    soup = BeautifulSoup(response.text, "html.parser")
-    links = soup.select("a")
-    contracts = []
-    for link in links:
-        href = link.get("href", "")
-        text = link.get_text(strip=True)
-        if "DocDownAction" in href and text:
-            full_url = "https://seoul.scourt.go.kr" + href
-            contracts.append({"name": text, "url": full_url})
-    return contracts
+st.markdown("### 📰 관련 뉴스")
+news_data = get_news(selected_topic)
+for title, link in news_data:
+    st.markdown(f"- [{title}]({link})")
 
-# 주제별 정보 출력
-if main_topic:
-    topic_data = get_topic_data(main_topic)
-    if topic_data:
-        sub_topic = st.radio(translate("세부 항목을 골라보세요"), list(topic_data.keys()))
+# ✅ 계약서 양식 다운로드 기능
+def get_contract_forms(topic):
+    form_list = {
+        "부동산": {
+            "주택 임대차 계약서": "https://www.scourt.go.kr/portal/information/form/viewFormFile.do?formFileId=2bfe4b59-dfae-4f8b-9c2a-5793d22b1bd2",
+            "상가 임대차 계약서": "https://www.scourt.go.kr/portal/information/form/viewFormFile.do?formFileId=ae3839cb-1406-4ac5-8788-94bb168a5e4f"
+        },
+        "아르바이트": {
+            "근로 계약서": "https://www.moel.go.kr/policy/policyinfo/etcEmp/download/parttime_contract.hwp"
+        },
+        "금융": {},
+        "세금": {},
+        "계약": {
+            "물품 공급 계약서": "https://www.scourt.go.kr/portal/information/form/viewFormFile.do?formFileId=fedc1dc9-e181-4f7b-b646-74c6c4e1ab26"
+        }
+    }
+    return form_list.get(topic, {})
 
-        # ✅ 탭 구성
-        tab1, tab2, tab3, tab4, tab5 = st.tabs([
-            translate("📖 정보 보기"),
-            translate("📰 관련 뉴스"),
-            translate("📄 계약서 양식"),
-            translate("🎬 유튜브 영상"),
-            translate("💬 의견 남기기")
-        ])
+st.markdown("### 📄 계약서 양식")
+forms = get_contract_forms(selected_topic)
 
-        # 📖 정보 보기
-        with tab1:
-            st.subheader(translate("📖 선택한 정보"))
-            item = topic_data.get(sub_topic, {})
-            if isinstance(item, dict):
-                content = item.get("내용", "정보 없음")
-                source = item.get("출처", "")
-                st.success(translate(content))
-                if source:
-                    st.markdown(f"🔗 출처: [{source}]({source})")
-            else:
-                st.success(translate(item))
+if forms:
+    for name, link in forms.items():
+        st.download_button(
+            label=f"{name} 다운로드",
+            data=requests.get(link).content,
+            file_name=f"{name}.hwp",
+            mime="application/haansofthwp"
+        )
+else:
+    st.info("이 주제에 관련된 계약서 양식이 없습니다.")
 
-        # 📰 관련 뉴스
-        with tab2:
-            st.subheader(translate("📰 관련 뉴스 보기"))
-            search_keyword = f"{main_topic} 관련 뉴스 {sub_topic}"
-            news_items = get_news_snippets(search_keyword)
-            if news_items:
-                for news in news_items:
-                    st.markdown(f"**[{news['title']}]({news['link']})**")
-                    st.caption(news['summary'])
-            else:
-                st.warning(translate("관련 뉴스를 찾을 수 없습니다."))
+# ✅ 유튜브 영상 예시 출력
+video_links = {
+    "부동산": "https://www.youtube.com/watch?v=ecqgFeKkUhU",
+    "아르바이트": "https://www.youtube.com/watch?v=PN3oJpfn0lI",
+    "금융": "https://www.youtube.com/watch?v=tBvSsPqkzLg",
+    "세금": "https://www.youtube.com/watch?v=ZQTDzj7L7xM",
+    "계약": "https://www.youtube.com/watch?v=d_P4GGb0K2Y"
+}
+st.markdown("### 🎥 관련 유튜브 영상")
+st.video(video_links.get(selected_topic, ""))
 
-        # 📄 계약서 탭
-        with tab3:
-            if main_topic == "계약서":
-                st.subheader(translate("📄 서울법원 계약서 열람 및 다운로드"))
-                contract_list = get_contract_list()
-                if contract_list:
-                    for contract in contract_list:
-                        st.markdown(f"📄 **{contract['name']}** 👉 [다운로드]({contract['url']})")
-                else:
-                    st.warning(translate("계약서 목록을 불러올 수 없습니다."))
-            else:
-                st.info(translate("계약서 관련 항목에서만 양식이 제공됩니다."))
+# ✅ 다국어 번역 기능
+st.markdown("### 🌐 주요 문장 번역")
+default_text = "안녕하세요. 계약서를 작성할 때는 내용을 꼼꼼히 읽어야 합니다."
+text_to_translate = st.text_input("번역할 문장을 입력하세요", default_text)
 
-        # 🎬 유튜브 영상
-        with tab4:
-            st.subheader(translate("🎬 유튜브 영상"))
-            video = get_youtube_video_info(f"{main_topic} {sub_topic}")
-            if video:
-                st.image(video["thumbnail"], caption=translate(video["title"]))
-                st.markdown(f"[🔗 영상 보기](https://www.youtube.com/watch?v={video['videoId']})")
-            else:
-                st.warning(translate("유튜브 영상을 찾을 수 없습니다."))
+if text_to_translate:
+    from googletrans import Translator
+    translator = Translator()
+    result = translator.translate(text_to_translate, dest='en')
+    st.markdown(f"**영어 번역:** {result.text}")
 
-        # 💬 의견 남기기
-        with tab5:
-            st.subheader(translate("💬 의견 남기기"))
-            feedback = st.text_area(translate("궁금한 점이나 요청하고 싶은 내용을 적어주세요"))
-            if st.button(translate("제출")):
-                st.success(translate("소중한 의견 감사합니다! 빠른 시일 내 반영하겠습니다."))
-    else:
-        st.warning(translate("선택한 주제에 대한 정보가 없습니다."))
+# ✅ 사용자 의견
+st.markdown("### ✍️ 의견 보내기")
+feedback = st.text_area("이 앱에 대한 개선 사항이나 의견이 있다면 작성해 주세요.")
+if st.button("의견 제출"):
+    st.success("의견이 제출되었습니다. 감사합니다!")
 
