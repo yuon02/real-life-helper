@@ -10,7 +10,17 @@ st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide"
 
 # ✅ 그 이후에 다른 코드 작성
 st.image("logo.png", width=150)
+# ✅ 함수 정의는 위에 있어야 함
+def get_topic_data(topic):
+    if topic == "아르바이트":
+        return {"news": "관련 뉴스", "info": "관련 정보"}
+    else:
+        return {"news": "기타 뉴스", "info": "기타 정보"}
 
+# ✅ 이후에 호출
+main_topic = st.selectbox("궁금한 주제를 선택하세요", ["아르바이트", "주거", "부동산"])
+topic_data = get_topic_data(main_topic)
+st.write(topic_data)
 # 타이틀 및 설명
 st.title(":books: 청년 실생활 정보 도우미")
 st.markdown("청년, 대학생, 사회초년생을 위한 맞춤 정보 플랫폼입니다!")
