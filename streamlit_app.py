@@ -4,29 +4,54 @@ from bs4 import BeautifulSoup
 import re
 import json
 from googletrans import Translator
+import urllib.parse  # YouTube 검색 시 필요
 
 # ✅ 반드시 첫 번째 Streamlit 명령어로 위치시킴
 st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
 
-# ✅ 그 이후에 다른 코드 작성
-st.image("logo.png", width=150)
-# ✅ 함수 정의는 위에 있어야 함
+# ✅ get_topic_data 함수 정의
+def get_topic_data(topic):
+    if topic == "아르바이트":
+        return {
+            "info": "최저임금, 근로계약서 작성, 주휴수당 등에 대한 정보입니다.",
+            "link": "https://www.moel.go.kr/policy/policyinfo/directions/view.do?bbs_seq=20210500319"
+        }
+    elif topic == "주거":
+        return {
+            "info": "청년 전세자금대출, 공공임대주택 등의 정보를 확인하세요.",
+            "link": "https://www.myhome.go.kr"
+        }
+    elif topic == "부동산":
+        return {
+            "info": "부동산 계약 시 확인해야 할 사항 및 서식 정보입니다.",
+            "link": "https://www.law.go.kr/LSW/lsBylInfoP.do?bylSeq=11287984"
+        }
+    else:
+        return {
+            "info": "해당 주제에 대한 정보가 없습니다.",
+            "link": ""
+        }
 
-# ✅ 이후에 호출
-main_topic = st.selectbox("궁금한 주제를 선택하세요", ["아르바이트", "주거", "부동산"])
-topic_data = get_topic_data(main_topic)
-st.write(topic_data)
-# 타이틀 및 설명
+# ✅ 로고 이미지 표시
+st.image("logo.png", width=150)
+
+# ✅ 타이틀 및 설명
 st.title(":books: 청년 실생활 정보 도우미")
 st.markdown("청년, 대학생, 사회초년생을 위한 맞춤 정보 플랫폼입니다!")
-# 언어 선택
+
+# ✅ 언어 선택 및 번역기 설정
 lang = st.selectbox("언어를 선택하세요", ["한국어", "English"])
 translator = Translator()
 translate = lambda text: translator.translate(text, dest="en").text if lang == "English" else text
-# 주제 선택
-main_topic = st.selectbox("궁금한 주제를 선택하세요", ["아르바이트", "주거", "부동산"])
+
+
+# ✅ 주제 데이터 가져오기
 topic_data = get_topic_data(main_topic)
-st.write(topic_data)
+
+# ✅ 데이터 표시
+st.write(translate(topic_data["info"]))
+if topic_data["link"]:
+    st.markdown(f"[관련 링크 보러가기]({topic_data['link']})")
 def get_youtube_video_info(query):
    headers = {
        "User-Agent": "Mozilla/5.0"
