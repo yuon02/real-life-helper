@@ -1,15 +1,16 @@
 import streamlit as st
-st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
-st.image("logo.png", width=150)  # 로고 이미지 추가
-# ✅ 페이지 설정: 반드시 가장 위에 위치
-st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
-from utils.helper import get_topic_data
-from googletrans import Translator
 import requests
-import json
 from bs4 import BeautifulSoup
-import urllib.parse
 import re
+import json
+from googletrans import Translator
+
+# ✅ 반드시 첫 번째 Streamlit 명령어로 위치시킴
+st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
+
+# ✅ 그 이후에 다른 코드 작성
+st.image("logo.png", width=150)
+
 # 타이틀 및 설명
 st.title(":books: 청년 실생활 정보 도우미")
 st.markdown("청년, 대학생, 사회초년생을 위한 맞춤 정보 플랫폼입니다!")
