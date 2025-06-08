@@ -1,114 +1,214 @@
 import streamlit as st
-import pandas as pd
+# ✅ 페이지 설정: 반드시 가장 위에 위치
+st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
+from utils.helper import get_topic_data
+from googletrans import Translator
 import requests
+import json
 from bs4 import BeautifulSoup
-
-# 페이지 설정
-st.set_page_config(page_title="실생활 정보 도우미", layout="wide")
-
-# 기본 정보
-st.title("🧭 실생활 정보 도우미")
-st.markdown("대학생 및 사회초년생을 위한 분야별 실용 정보, 뉴스, 계약서 양식, 영상, 다국어 번역 제공")
-
-# 분야 리스트
-topics = ["부동산", "아르바이트", "금융", "세금", "계약"]
-
-# 사용자 선택
-selected_topic = st.selectbox("관심 있는 주제를 선택하세요", topics)
-
-# 각 분야별 기본 설명 및 처리
-topic_info = {
-    "부동산": "부동산 임대차, 전세계약, 중개 관련 정보를 제공합니다.",
-    "아르바이트": "근로계약서, 시급, 주휴수당 관련 정보를 확인하세요.",
-    "금융": "은행 계좌, 카드, 대출 관련 기초 지식을 제공합니다.",
-    "세금": "소득세, 주민세, 연말정산 등에 대한 정보를 안내합니다.",
-    "계약": "일상 생활에서 필요한 계약의 기초 개념과 양식을 제공합니다.",
-}
-
-st.subheader(f"📌 {selected_topic} 정보")
-st.markdown(topic_info[selected_topic])
-
-# ✅ 뉴스 가져오기 기능 (분야별로 다르게 표시)
-def get_news(topic):
-    try:
-        query = f"{topic} 실생활"
-        url = f"https://search.naver.com/search.naver?where=news&query={query}"
-        response = requests.get(url)
-        soup = BeautifulSoup(response.text, 'html.parser')
-
-        news_items = soup.select("a.news_tit")
-        news_list = []
-
-        for item in news_items[:5]:
-            title = item.get("title")
-            link = item.get("href")
-            news_list.append((title, link))
-        return news_list
-    except Exception as e:
-        return [("뉴스를 가져오는 중 오류 발생", "#")]
-
-st.markdown("### 📰 관련 뉴스")
-news_data = get_news(selected_topic)
-for title, link in news_data:
-    st.markdown(f"- [{title}]({link})")
-
-# ✅ 계약서 양식 다운로드 기능
-def get_contract_forms(topic):
-    form_list = {
-        "부동산": {
-            "주택 임대차 계약서": "https://www.scourt.go.kr/portal/information/form/viewFormFile.do?formFileId=2bfe4b59-dfae-4f8b-9c2a-5793d22b1bd2",
-            "상가 임대차 계약서": "https://www.scourt.go.kr/portal/information/form/viewFormFile.do?formFileId=ae3839cb-1406-4ac5-8788-94bb168a5e4f"
-        },
-        "아르바이트": {
-            "근로 계약서": "https://www.moel.go.kr/policy/policyinfo/etcEmp/download/parttime_contract.hwp"
-        },
-        "금융": {},
-        "세금": {},
-        "계약": {
-            "물품 공급 계약서": "https://www.scourt.go.kr/portal/information/form/viewFormFile.do?formFileId=fedc1dc9-e181-4f7b-b646-74c6c4e1ab26"
-        }
-    }
-    return form_list.get(topic, {})
-
-st.markdown("### 📄 계약서 양식")
-forms = get_contract_forms(selected_topic)
-
-if forms:
-    for name, link in forms.items():
-        st.download_button(
-            label=f"{name} 다운로드",
-            data=requests.get(link).content,
-            file_name=f"{name}.hwp",
-            mime="application/haansofthwp"
-        )
-else:
-    st.info("이 주제에 관련된 계약서 양식이 없습니다.")
-
-# ✅ 유튜브 영상 예시 출력
-video_links = {
-    "부동산": "https://www.youtube.com/watch?v=ecqgFeKkUhU",
-    "아르바이트": "https://www.youtube.com/watch?v=PN3oJpfn0lI",
-    "금융": "https://www.youtube.com/watch?v=tBvSsPqkzLg",
-    "세금": "https://www.youtube.com/watch?v=ZQTDzj7L7xM",
-    "계약": "https://www.youtube.com/watch?v=d_P4GGb0K2Y"
-}
-st.markdown("### 🎥 관련 유튜브 영상")
-st.video(video_links.get(selected_topic, ""))
-
-# ✅ 다국어 번역 기능
-st.markdown("### 🌐 주요 문장 번역")
-default_text = "안녕하세요. 계약서를 작성할 때는 내용을 꼼꼼히 읽어야 합니다."
-text_to_translate = st.text_input("번역할 문장을 입력하세요", default_text)
-
-if text_to_translate:
-    from googletrans import Translator
-    translator = Translator()
-    result = translator.translate(text_to_translate, dest='en')
-    st.markdown(f"**영어 번역:** {result.text}")
-
-# ✅ 사용자 의견
-st.markdown("### ✍️ 의견 보내기")
-feedback = st.text_area("이 앱에 대한 개선 사항이나 의견이 있다면 작성해 주세요.")
-if st.button("의견 제출"):
-    st.success("의견이 제출되었습니다. 감사합니다!")
-
+import urllib.parse
+import re
+# 타이틀 및 설명
+st.title(":books: 청년 실생활 정보 도우미")
+st.markdown("청년, 대학생, 사회초년생을 위한 맞춤 정보 플랫폼입니다!")
+# 언어 선택
+lang = st.selectbox("언어를 선택하세요", ["한국어", "English"])
+translator = Translator()
+translate = lambda text: translator.translate(text, dest="en").text if lang == "English" else text
+# 주제 선택
+main_topic = st.selectbox(translate("궁금한 주제를 선택하세요 ⬇"), ["아르바이트", "부동산", "금융", "계약서"])
+# 유튜브 영상 정보 크롤링 함수 (API 없이 동작)
+def get_youtube_video_info(query):
+   headers = {
+       "User-Agent": "Mozilla/5.0"
+   }
+   search_query = urllib.parse.quote(query)
+   url = f"https://www.youtube.com/results?search_query={search_query}"
+   response = requests.get(url, headers=headers)
+   soup = BeautifulSoup(response.text, "html.parser")
+   for script in soup.find_all("script"):
+       if "var ytInitialData" in script.text:
+           match = re.search(r'var ytInitialData = ({.*?});', script.string or "", re.DOTALL)
+           if match:
+               try:
+                   data = json.loads(match.group(1))
+                   items = data["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"]
+                   for item in items:
+                       if "videoRenderer" in item:
+                           video = item["videoRenderer"]
+                           title = video["title"]["runs"][0]["text"]
+                           video_id = video["videoId"]
+                           thumbnail = video["thumbnail"]["thumbnails"][-1]["url"]
+                           return {
+                               "videoId": video_id,
+                               "title": title,
+                               "thumbnail": thumbnail
+                           }
+               except Exception as e:
+                   print("파싱 에러:", e)
+   return None
+# 본문 실행
+if main_topic:
+   topic_data = get_topic_data(main_topic)
+   sub_topic = st.radio(translate(":mag: 세부 항목을 골라보세요"), list(topic_data.keys()))
+   st.markdown("---")
+   st.subheader(translate(":bulb: 관련 정보"))
+   item = topic_data.get(sub_topic, {})
+   if isinstance(item, dict):
+       content = item.get("내용", "정보 없음")
+       source = item.get("출처", "")
+       st.success(translate(content))
+       if source:
+           st.markdown(f"\n출처: [{source}]({source})")
+   else:
+       st.success(translate(item))
+   # ✅ 계약서 및 아르바이트 관련 양식 표시
+   if main_topic in ["계약서", "아르바이트"]:
+       st.markdown("---")
+       st.subheader(translate(":page_with_curl: 계약서 예시/양식 보기"))
+       # ✅ 외부 PDF 링크로 제공 (2025년 PDF)
+       pdf_url = "https://inpyeonglaw.com/wp-content/uploads/2025/03/%EA%B0%9C%EC%A0%95-%ED%91%9C%EC%A4%80%EC%B7%A8%EC%97%85%EA%B7%9C%EC%B9%992025%EB%85%84-%EB%B0%B0%ED%8F%AC.pdf"
+       st.markdown(f"[📄 표준 근로계약서 PDF 열기]({pdf_url})")
+       # ✅ 계약서 예시 이미지 및 사이트 링크
+       st.image("https://viewer.moj.go.kr/images/sub/skin/skinDoc_01.gif", caption="법무부 계약서 예시 이미지")
+       st.markdown("[👉 법무부 계약서 전체 보기](https://viewer.moj.go.kr/skin/doc.html?rs=/result/bbs/118&fn=temp_1681802272120100)")
+   # ✅ 부동산 관련 사이트 안내
+   if main_topic == "부동산":
+       st.markdown("---")
+       st.subheader(translate(":house: 관련 공식 사이트 안내"))
+       st.markdown(f"- [{translate('청약홈 (LH 공사)')}](https://www.applyhome.co.kr)")
+       st.markdown(f"- [{translate('부동산 계약 절차 가이드 - 국토교통부')}](https://www.molit.go.kr)")
+       st.markdown(f"- [{translate('주택도시기금 - 버팀목 대출')}](https://nhuf.molit.go.kr)")
+       st.info(translate("청약 신청, 임대차 보호법, 대출 상품 등을 제공하는 공식 사이트입니다. 꼭 참고하세요."))
+       # ✅ 부동산 뉴스 링크 추가
+       st.markdown("---")
+       st.subheader(translate(":newspaper: 부동산 관련 뉴스 보기"))
+       st.markdown("[네이버 뉴스 검색 결과 보기](https://search.naver.com/search.naver?where=news&query=부동산)")
+   # ✅ 네이버 뉴스 링크 (모든 항목 공통)
+   st.markdown("---")
+   st.subheader(translate(":newspaper: 관련 네이버 뉴스 보기"))
+   naver_news_url = f"https://search.naver.com/search.naver?where=news&query={main_topic}+{sub_topic}"
+   st.markdown(f"[{translate(main_topic + ' ' + sub_topic)} 관련 뉴스 보기]({naver_news_url})")
+   # ✅ 유튜브 영상 출력
+   st.markdown("---")
+   st.subheader(translate(":tv: 관련 유튜브 영상 보기"))
+   youtube_info = get_youtube_video_info(f"{main_topic} {sub_topic}")
+   if youtube_info:
+       st.image(youtube_info["thumbnail"], caption=translate(youtube_info["title"]))
+       st.markdown(f"[YouTube에서 영상 보기](https://www.youtube.com/watch?v={youtube_info['videoId']})")
+   else:
+       st.info(translate("관련 유튜브 영상을 찾을 수 없습니다."))
+   # ✅ 사용자 의견 입력
+   st.markdown("---")
+   st.info(translate("원하는 정보가 부족하다면 아래에 의견을 남겨주세요!"))
+   feedback = st.text_area(translate("궁금한 점이나 요청하고 싶은 내용을 적어주세요"))
+   if st.button(translate("제출")):
+       st.success(translate("소중한 의견 감사합니다! 빠른 시일 내 반영하겠습니다."))
+ 
+import streamlit as st
+# ✅ 페이지 설정
+st.set_page_config(page_title="청년 실생활 정보 가이드", layout="wide")
+from utils.helper import get_topic_data
+from googletrans import Translator
+import requests
+import json
+from bs4 import BeautifulSoup
+import urllib.parse
+import re
+# 타이틀 및 소개
+st.title(":books: 청년 실생활 정보 도우미")
+st.markdown("청년, 대학생, 사회초년생을 위한 맞춤 정보 플랫폼입니다!")
+# 언어 선택
+lang = st.selectbox("언어를 선택하세요", ["한국어", "English"])
+translator = Translator()
+translate = lambda text: translator.translate(text, dest="en").text if lang == "English" else text
+# 주제 선택
+main_topic = st.selectbox(translate("궁금한 주제를 선택하세요 ⬇"), ["아르바이트", "부동산", "금융", "계약서"])
+# 유튜브 영상 검색 함수
+def get_youtube_video_info(query):
+   headers = {
+       "User-Agent": "Mozilla/5.0"
+   }
+   search_query = urllib.parse.quote(query)
+   url = f"https://www.youtube.com/results?search_query={search_query}"
+   response = requests.get(url, headers=headers)
+   soup = BeautifulSoup(response.text, "html.parser")
+   for script in soup.find_all("script"):
+       if "var ytInitialData" in script.text:
+           match = re.search(r'var ytInitialData = ({.*?});', script.string or "", re.DOTALL)
+           if match:
+               try:
+                   data = json.loads(match.group(1))
+                   items = data["contents"]["twoColumnSearchResultsRenderer"]["primaryContents"]["sectionListRenderer"]["contents"][0]["itemSectionRenderer"]["contents"]
+                   for item in items:
+                       if "videoRenderer" in item:
+                           video = item["videoRenderer"]
+                           title = video["title"]["runs"][0]["text"]
+                           video_id = video["videoId"]
+                           thumbnail = video["thumbnail"]["thumbnails"][-1]["url"]
+                           return {
+                               "videoId": video_id,
+                               "title": title,
+                               "thumbnail": thumbnail
+                           }
+               except Exception as e:
+                   print("파싱 에러:", e)
+   return None
+# 메인 로직
+if main_topic:
+   topic_data = get_topic_data(main_topic)
+   sub_topic = st.radio(translate(":mag: 세부 항목을 골라보세요"), list(topic_data.keys()))
+   st.markdown("---")
+   st.subheader(translate(":bulb: 관련 정보"))
+   item = topic_data.get(sub_topic, {})
+   if isinstance(item, dict):
+       content = item.get("내용", "정보 없음")
+       source = item.get("출처", "")
+       st.success(translate(content))
+       if source:
+           st.markdown(f"\n출처: [{source}]({source})")
+   else:
+       st.success(translate(item))
+   # ✅ 계약서 및 아르바이트 관련 파일/이미지
+   if main_topic in ["계약서", "아르바이트"]:
+       st.markdown("---")
+       st.subheader(translate(":page_with_curl: 계약서 예시/양식 보기"))
+       # ✅ 외부 PDF 링크 (2025년)
+       pdf_url = "https://inpyeonglaw.com/wp-content/uploads/2025/03/%EA%B0%9C%EC%A0%95-%ED%91%9C%EC%A4%80%EC%B7%A8%EC%97%85%EA%B7%9C%EC%B9%992025%EB%85%84-%EB%B0%B0%ED%8F%AC.pdf"
+       st.markdown(f"[📄 표준 근로계약서 PDF 열기]({pdf_url})")
+       # ✅ 법무부 예시 이미지 및 링크
+       st.image("https://viewer.moj.go.kr/images/sub/skin/skinDoc_01.gif", caption="법무부 계약서 예시 이미지")
+       st.markdown("[👉 법무부 계약서 전체 보기](https://viewer.moj.go.kr/skin/doc.html?rs=/result/bbs/118&fn=temp_1681802272120100)")
+   # ✅ 부동산 관련 공식 정보 및 뉴스 추가
+   if main_topic == "부동산":
+       st.markdown("---")
+       st.subheader(translate(":house: 관련 공식 사이트 안내"))
+       st.markdown(f"- [{translate('청약홈 (LH 공사)')}](https://www.applyhome.co.kr)")
+       st.markdown(f"- [{translate('부동산 계약 절차 가이드 - 국토교통부')}](https://www.molit.go.kr)")
+       st.markdown(f"- [{translate('주택도시기금 - 버팀목 대출')}](https://nhuf.molit.go.kr)")
+       st.info(translate("청약 신청, 임대차 보호법, 대출 상품 등을 제공하는 공식 사이트입니다. 꼭 참고하세요."))
+       # ✅ 부동산 뉴스 (집값 + 정책)
+       st.markdown("---")
+       st.subheader(translate(":newspaper: 부동산 관련 뉴스 보기"))
+       st.markdown("[📈 집값 관련 뉴스 보기](https://search.naver.com/search.naver?where=news&query=집값)")
+       st.markdown("[🏛️ 부동산 정책 관련 뉴스 보기](https://search.naver.com/search.naver?where=news&query=부동산+정책)")
+   # ✅ 공통 뉴스 섹션
+   st.markdown("---")
+   st.subheader(translate(":newspaper: 관련 네이버 뉴스 보기"))
+   naver_news_url = f"https://search.naver.com/search.naver?where=news&query={main_topic}+{sub_topic}"
+   st.markdown(f"[{translate(main_topic + ' ' + sub_topic)} 관련 뉴스 보기]({naver_news_url})")
+   # ✅ 유튜브 영상 표시
+   st.markdown("---")
+   st.subheader(translate(":tv: 관련 유튜브 영상 보기"))
+   youtube_info = get_youtube_video_info(f"{main_topic} {sub_topic}")
+   if youtube_info:
+       st.image(youtube_info["thumbnail"], caption=translate(youtube_info["title"]))
+       st.markdown(f"[YouTube에서 영상 보기](https://www.youtube.com/watch?v={youtube_info['videoId']})")
+   else:
+       st.info(translate("관련 유튜브 영상을 찾을 수 없습니다."))
+   # ✅ 사용자 피드백 입력
+   st.markdown("---")
+   st.info(translate("원하는 정보가 부족하다면 아래에 의견을 남겨주세요!"))
+   feedback = st.text_area(translate("궁금한 점이나 요청하고 싶은 내용을 적어주세요"))
+   if st.button(translate("제출")):
+       st.success(translate("소중한 의견 감사합니다! 빠른 시일 내 반영하겠습니다."))
