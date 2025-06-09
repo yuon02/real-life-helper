@@ -11,6 +11,9 @@ import re
 # 타이틀 및 소개
 st.title(":books: 청년 실생활 정보 도우미")
 st.markdown("청년, 대학생, 사회초년생을 위한 맞춤 정보 플랫폼입니다!")
+st.image("logo.png", width=120)
+st.markdown("<h1 style='color:#3F72AF;'>청년 실생활 정보 도우미</h1>", unsafe_allow_html=True)
+st.caption("모바일처럼 편리하게, 필요한 생활 정보를 한눈에 확인하세요.")
 # 언어 선택
 lang = st.selectbox("언어를 선택하세요", ["한국어", "English"])
 translator = Translator()
