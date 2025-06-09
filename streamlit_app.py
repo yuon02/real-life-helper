@@ -114,8 +114,8 @@ if main_topic:
                "6. **중도금, 잔금 지급 및 소유권 이전**: 잔금 지급 시 소유권 이전 등기 진행, 취득세 신고 및 납부",
                "7. **입주 및 전입신고**: 실입주 또는 임대 시 전입신고"
            ]
-        for step in steps_sale:
-            st.markdown(step)
+           for step in steps_sale:  # ✅ 들여쓰기 한 단계 더
+               st.markdown(step)
        # ✅ 부동산 뉴스 (집값 + 정책)
        st.markdown("---")
        st.subheader(translate(":newspaper: 부동산 관련 뉴스 보기"))
