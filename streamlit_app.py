@@ -8,8 +8,9 @@ import json
 from bs4 import BeautifulSoup
 import urllib.parse
 import re
-# 타이틀 및 소개
-st.image("logo.png", width=120)
+
+# 사이드바 로고 표시
+st.sidebar.image("logo.png", use_column_width=True)
 st.title(":books: 청년 실생활 정보 도우미")
 st.markdown("청년, 대학생, 사회초년생을 위한 맞춤 정보 플랫폼입니다!")
 st.caption("모바일처럼 편리하게, 필요한 생활 정보를 한눈에 확인하세요.")
