@@ -83,7 +83,7 @@ if main_topic:
        st.markdown(f"- [{translate('부동산 계약 절차 가이드 - 국토교통부')}](https://www.molit.go.kr)")
        st.markdown(f"- [{translate('주택도시기금 - 버팀목 대출')}](https://nhuf.molit.go.kr)")
        st.info(translate("청약 신청, 임대차 보호법, 대출 상품 등을 제공하는 공식 사이트입니다. 꼭 참고하세요."))
-      def show_real_estate_procedure():
+   def show_real_estate_procedure():
     st.title("🏡 부동산 계약 절차 안내")
 
     tab1, tab2 = st.tabs(["전월세 계약 절차", "주택 매매 계약 절차"])
